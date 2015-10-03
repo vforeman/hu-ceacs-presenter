@@ -9,7 +9,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 -->
 
 <link rel="import" href="../../bower_components/polymer/polymer.html">
-
+<link rel="import" href="../../bower_components/iron-ajax/iron-ajax.html">
+<script src='pdf.js'></script>
 <dom-module id="hu-presenter">
   <template>
     <style>
@@ -18,6 +19,12 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       }
     </style>
     <div>Hello from <span>{{foo}}</span></div>
+    <iron-ajax id='ajax'
+      auto
+      url='sample.pdf'
+      handle-as='blob'
+      on-response='blobHandler'>
+    </iron-ajax>
   </template>
   <script>
   (function() {
@@ -25,13 +32,33 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
     Polymer({
       is: 'hu-presenter',
-
+      ready: function(){
+        console.log(PDFJS)
+      },
       properties: {
         foo: {
           type: String,
           value: 'hu-presenter',
           notify: true
         }
+      },
+      blobHandler: function(e){
+        console.log(e.detail.response);
+        this.file = e.detail.response;
+        switch(this.file.type.split('/')[1]){
+          case 'pdf':
+            console.log('we have a pdf')
+            var images = this.pdfToImage(this.file);
+            break;
+          case 'ppt':
+            console.log('we have a ppt')
+            break;
+
+        }
+      },
+      pdfToImage: function(file){
+        // var pdf = new PDFJS.PDFDoc(file);
+        console.log(pdf)
       }
     });
   })();
