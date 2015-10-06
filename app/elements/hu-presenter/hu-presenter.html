@@ -9,11 +9,12 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 -->
 
 <link rel="import" href="../../bower_components/polymer/polymer.html">
+<link rel="import" href="../../bower_components/paper-button/paper-button.html">
+<link rel="import" href="../../bower_components/iron-image/iron-image.html">
 <link rel="import" href="../../bower_components/firebase-element/firebase-collection.html">
 <link rel="import" href="../../bower_components/firebase-element/firebase-document.html">
 <link rel="import" href="../../bower_components/polymer-slideshow/polymer-slideshow.html">
 <link rel="import" href="../../bower_components/polymer-slideshow/polymer-slide.html">
-<script src='pdf.js'></script>
 <dom-module id="hu-presenter">
   <template>
     <style>
@@ -21,10 +22,21 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         display: block;
       }
     </style>
-    <firebase-document id='ref' location='https://hu-cx-presenter.firebaseio.com'
-      data='{{appData}}'></firebase-document>
-
-    
+    <firebase-collection id='slideshows'
+      location='https://hu-cx-presenter.firebaseio.com/slideshows'
+      data='{{slideshows}}'></firebase-collection>
+    <paper-button raised on-click='launchFullScreen'>fullscreen</paper-button>
+    <iron-pages id='pages' selected="{{selected}}" on-webkitfullscreenchange='resizeImages'>
+      <template is='dom-repeat' items='{{slideshows}}'>
+        <template is='dom-if' if='{{item.include}}'>
+          <template is='dom-repeat' items='{{item.pics}}'>
+            <section>
+              <iron-image src="{{item}}"  sizing="contain" height='{{height}}' width='{{width}}'></iron-image>
+            </section>
+          </template>
+        </template>
+      </template>
+    </iron-pages>
 
   </template>
   <script>
@@ -34,13 +46,33 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     Polymer({
       is: 'hu-presenter',
       ready: function(){
-        // console.log(this.$.ref.query)
+        setInterval(this.changeSlides.bind(this),this.slideInterval);
       },
       properties: {
-        appData: { type: Object, notify: true, observer: 'appDataChanged'}
+        slideInterval: { type: Number,value: 1000, notify: true},
+        selected: { type: Number,value: 0, notify: true},
+        width: { type: Number,value: 600, notify: true},
+        height: { type: Number,value: 400, notify: true},
+        slideshows: { type: Array, notify: true, observer: 'slideshowsChanged'}
       },
-      appDataChanged: function(appData){
-        console.log(appData);
+      slideshowsChanged: function(slideshows){
+        console.log(slideshows);
+      },
+      launchFullScreen: function(e){
+        this.$.pages.webkitRequestFullscreen();
+      },
+      resizeImages: function(e){
+        var isFullscreen = document.webkitFullscreenElement;
+        if(isFullscreen){
+          this.width = screen.availWidth;
+          this.height = screen.availHeight;
+        } else {
+          this.width = 600;
+          this.height = 400;
+        }
+      },
+      changeSlides: function(){
+        this.$.pages.selectNext()
       }
     });
   })();

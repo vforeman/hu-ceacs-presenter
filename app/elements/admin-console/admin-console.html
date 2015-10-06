@@ -31,9 +31,12 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     <template is='dom-if' if='{{isLoggedIn}}'>
         <paper-button raised
           on-click='_attemptLogout'>Logout</paper-button>
-        <firebase-collection id='collection'
+        <firebase-collection id='slideshows'
           location='https://hu-cx-presenter.firebaseio.com/slideshows'
           data='{{slideshows}}'></firebase-collection>
+        <firebase-collection id='tokens'
+          location='https://hu-cx-presenter.firebaseio.com/submissionTokens'
+          data='{{tokens}}'></firebase-collection>
     </template>
 
 
@@ -47,13 +50,15 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       </section>
       <section>
         <template is='dom-repeat' items="{{slideshows}}">
-          <span>{{item.organization}}</span>,
-          <span>{{item.description}}</span>,
-          <span>{{item.deadline}}</span>,
-          <span>{{item.include}}</span>,
-          <template is='dom-repeat' items='{{item.pics}}'>
-            <iron-image src="{{item}}" sizing="contain" height='50' width='50'></iron-image>
-          </template>
+          <paper-material elevation="1">
+            <span>{{item.organization}}</span>,
+            <span>{{item.description}}</span>,
+            <span>{{item.deadline}}</span>,
+            <span>{{item.include}}</span>,
+            <template is='dom-repeat' items='{{item.pics}}'>
+              <iron-image src="{{item}}" sizing="contain" height='50' width='50'></iron-image>
+            </template>
+          </paper-material>
         </template>
       </section>
     </iron-pages>
@@ -66,6 +71,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       is: 'admin-console',
 
       properties: {
+        tokens: {type: Array},
         slideshows: {type: Array, observer: '_slideshowsChanged'},
         selected: {type: Number,notify: true, computed: '_selected(isLoggedIn)'},
         isLoggedIn: {type: Object,notify: true, computed: '_isLoggedIn(user)'},
