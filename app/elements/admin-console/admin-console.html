@@ -1,0 +1,107 @@
+<!--
+@license
+Copyright (c) 2015 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+<link rel="import" href="../../bower_components/iron-image/iron-image.html">
+<link rel="import" href="../../bower_components/firebase-element/firebase-auth.html">
+<link rel="import" href="../../bower_components/firebase-element/firebase-collection.html">
+<link rel="import" href="../../bower_components/paper-input/paper-input.html">
+<link rel="import" href="../../bower_components/paper-button/paper-button.html">
+<link rel="import" href="../../bower_components/iron-pages/iron-pages.html">
+
+<dom-module id="admin-console">
+  <template>
+    <style>
+      :host {
+        display: block;
+      }
+    </style>
+    <firebase-auth id='auth'
+      location='https://hu-cx-presenter.firebaseio.com'
+      provider='password'
+      user='{{user}}'></firebase-auth>
+
+    <template is='dom-if' if='{{isLoggedIn}}'>
+        <paper-button raised
+          on-click='_attemptLogout'>Logout</paper-button>
+        <firebase-collection id='collection'
+          location='https://hu-cx-presenter.firebaseio.com/slideshows'
+          data='{{slideshows}}'></firebase-collection>
+    </template>
+
+
+
+    <iron-pages id='pages' selected="{{selected}}">
+      <section >
+        <paper-input id='email' label="email"></paper-input>
+        <paper-input id='password' label="password" type='password'></paper-input>
+        <paper-button raised
+          on-click='_attemptLogin'>Login</paper-button>
+      </section>
+      <section>
+        <template is='dom-repeat' items="{{slideshows}}">
+          <span>{{item.organization}}</span>,
+          <span>{{item.description}}</span>,
+          <span>{{item.deadline}}</span>,
+          <span>{{item.include}}</span>,
+          <template is='dom-repeat' items='{{item.pics}}'>
+            <iron-image src="{{item}}" sizing="contain" height='50' width='50'></iron-image>
+          </template>
+        </template>
+      </section>
+    </iron-pages>
+  </template>
+  <script>
+  (function() {
+    'use strict';
+
+    Polymer({
+      is: 'admin-console',
+
+      properties: {
+        slideshows: {type: Array, observer: '_slideshowsChanged'},
+        selected: {type: Number,notify: true, computed: '_selected(isLoggedIn)'},
+        isLoggedIn: {type: Object,notify: true, computed: '_isLoggedIn(user)'},
+        user: {type: Object,notify: true, observer: '_userChanged'},
+        foo: {type: String,value: 'admin-console',notify: true}
+      },
+      _slideshowsChanged: function(slideshows){
+        console.log('slideshows', slideshows)
+      },
+      _userChanged: function(user){
+        console.log('user',user);
+      },
+      _attemptLogin: function(e){
+        this.$.auth.login({
+          email: this.$.email.value,
+          password: this.$.password.value
+        });
+      },
+      _attemptLogout: function(e){
+        this.$.auth.logout();
+      },
+      _isLoggedIn: function(user){
+        if(user){
+          return true;
+        } else {
+          return false;
+        }
+      },
+      _selected: function(isLoggedIn){
+        if(isLoggedIn){
+          return 1;
+        } else {
+          return 0;
+        }
+      }
+    });
+  })();
+  </script>
+</dom-module>
