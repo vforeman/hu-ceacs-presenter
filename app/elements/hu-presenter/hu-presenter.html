@@ -9,7 +9,10 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 -->
 
 <link rel="import" href="../../bower_components/polymer/polymer.html">
-<link rel="import" href="../../bower_components/iron-ajax/iron-ajax.html">
+<link rel="import" href="../../bower_components/firebase-element/firebase-collection.html">
+<link rel="import" href="../../bower_components/firebase-element/firebase-document.html">
+<link rel="import" href="../../bower_components/polymer-slideshow/polymer-slideshow.html">
+<link rel="import" href="../../bower_components/polymer-slideshow/polymer-slide.html">
 <script src='pdf.js'></script>
 <dom-module id="hu-presenter">
   <template>
@@ -18,13 +21,11 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         display: block;
       }
     </style>
-    <div>Hello from <span>{{foo}}</span></div>
-    <iron-ajax id='ajax'
-      auto
-      url='sample.pdf'
-      handle-as='blob'
-      on-response='blobHandler'>
-    </iron-ajax>
+    <firebase-document id='ref' location='https://hu-cx-presenter.firebaseio.com'
+      data='{{appData}}'></firebase-document>
+
+    
+
   </template>
   <script>
   (function() {
@@ -33,32 +34,13 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     Polymer({
       is: 'hu-presenter',
       ready: function(){
-        // console.log(PDFJS)
+        // console.log(this.$.ref.query)
       },
       properties: {
-        foo: {
-          type: String,
-          value: 'hu-presenter',
-          notify: true
-        }
+        appData: { type: Object, notify: true, observer: 'appDataChanged'}
       },
-      blobHandler: function(e){
-        // console.log(e.detail.response);
-        this.file = e.detail.response;
-        switch(this.file.type.split('/')[1]){
-          case 'pdf':
-            console.log('we have a pdf')
-            var images = this.pdfToImage(this.file);
-            break;
-          case 'ppt':
-            console.log('we have a ppt')
-            break;
-
-        }
-      },
-      pdfToImage: function(file){
-        // var pdf = new PDFJS.PDFDoc(file);
-        // console.log(pdf)
+      appDataChanged: function(appData){
+        console.log(appData);
       }
     });
   })();
