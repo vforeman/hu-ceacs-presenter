@@ -33,7 +33,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     Polymer({
       is: 'hu-presenter',
       ready: function(){
-        console.log(PDFJS)
+        // console.log(PDFJS)
       },
       properties: {
         foo: {
@@ -43,7 +43,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         }
       },
       blobHandler: function(e){
-        console.log(e.detail.response);
+        // console.log(e.detail.response);
         this.file = e.detail.response;
         switch(this.file.type.split('/')[1]){
           case 'pdf':
@@ -58,7 +58,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       },
       pdfToImage: function(file){
         // var pdf = new PDFJS.PDFDoc(file);
-        console.log(pdf)
+        // console.log(pdf)
       }
     });
   })();

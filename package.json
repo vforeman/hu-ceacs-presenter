@@ -35,5 +35,9 @@
   },
   "engines": {
     "node": ">=0.10.0"
+  },
+  "dependencies": {
+    "brace-expansion": "^1.1.1",
+    "minimatch": "^3.0.0"
   }
 }

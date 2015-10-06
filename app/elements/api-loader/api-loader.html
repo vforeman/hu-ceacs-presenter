@@ -1,0 +1,88 @@
+<!--
+@license
+Copyright (c) 2015 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+<link rel="import" href="../../bower_components/firebase-element/firebase-document.html">
+<link rel="import" href="../../bower_components/firebase-element/firebase-collection.html">
+<link rel="import" href="../../bower_components/paper-input/paper-input.html">
+<link rel="import" href="../../bower_components/paper-checkbox/paper-checkbox.html">
+<link rel="import" href="../../bower_components/paper-button/paper-button.html">
+<link rel="import" href="../../bower_components/paper-toast/paper-toast.html">
+<script src='../../bower_components/chance/chance.js'>
+
+</script>
+
+<dom-module id="api-loader">
+  <template>
+    <style>
+      :host {
+        display: block;
+      }
+    </style>
+    <div>Hello from <span>{{foo}}</span></div>
+
+    <firebase-collection id='firebase'
+      location='https://hu-cx-presenter.firebaseio.com/slideshows'></firebase-collection>
+
+    <paper-input id='organization' placeholder='organization'></paper-input>
+    <paper-input id='description' placeholder='description'></paper-input>
+    <paper-input id='deadline' placeholder='deadline mm/dd/yyyy'></paper-input>
+    <paper-checkbox id='include' checked>include</paper-checkbox>
+    <input id='slides' type='file' placeholder='slideshow images' multiple
+      on-change='onload' accept="image/gif, image/jpg, image/jpeg, image/png"></input>
+    <paper-button raised
+      on-click='addSlideshow'>add</paper-button>
+    <paper-toast id='toast'></paper-toast>
+  </template>
+  <script>
+  (function() {
+    'use strict';
+
+    Polymer({
+      is: 'api-loader',
+
+      properties: {
+        // slideshows: {type: Object,notify: true, observer: '_slideshowsChanged'},
+        pics: {type: Array,value: [],notify: true},
+        foo: {type: String,value: 'api-loader',notify: true}
+      },
+      _slideshowsChanged: function(slideshows){
+        console.log('slideshows', slideshows);
+      },
+      onload: function(e){
+        console.log(this.$.slides.files)
+
+        for(var i = 0; i < this.$.slides.files.length; ++i){
+          var reader = new FileReader();
+          reader.onload = (function(e){
+            console.log(e.target.result);
+            this.pics.push(e.target.result)
+          }).bind(this);
+          reader.readAsDataURL(this.$.slides.files[i]);
+        }
+
+
+      },
+      addSlideshow: function(e){
+        console.log('adding new slideshow')
+        var slideshow = {
+          organization: this.$.organization.value,
+          description: this.$.description.value,
+          deadline: this.$.deadline.value,
+          include: this.$.include.checked,
+          pics: this.pics
+        };
+        this.$.firebase.add(slideshow);
+        console.log(slideshow);
+      }
+    });
+  })();
+  </script>
+</dom-module>
