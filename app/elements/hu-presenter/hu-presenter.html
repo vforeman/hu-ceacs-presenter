@@ -9,33 +9,36 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 -->
 
 <link rel="import" href="../../bower_components/polymer/polymer.html">
+<link rel="import" href="../../bower_components/paper-icon-button/paper-icon-button.html">
 <link rel="import" href="../../bower_components/paper-button/paper-button.html">
+<link rel="import" href="../../bower_components/paper-toast/paper-toast.html">
 <link rel="import" href="../../bower_components/iron-image/iron-image.html">
-<link rel="import" href="../../bower_components/firebase-element/firebase-collection.html">
 <link rel="import" href="../../bower_components/firebase-element/firebase-document.html">
-<link rel="import" href="../../bower_components/polymer-slideshow/polymer-slideshow.html">
-<link rel="import" href="../../bower_components/polymer-slideshow/polymer-slide.html">
 <dom-module id="hu-presenter">
   <template>
     <style>
       :host {
         display: block;
+        @apply(--layout-vertical);
+      }
+      paper-material{
+        padding: 16px 0px;
+        margin-bottom: 24px;
       }
     </style>
-    <firebase-collection id='slideshows'
+    <firebase-document id='ref'
       location='https://hu-cx-presenter.firebaseio.com/slideshows'
-      data='{{slideshows}}'></firebase-collection>
-    <paper-button raised on-click='launchFullScreen'>fullscreen</paper-button>
+      data='{{dataRef}}'></firebase-document>
+    <paper-toast id='toast'
+      text='The slide deck is about to be updated! The updated slide deck will begin once this rotation is complete.'
+      duration='5000'></paper-toast>
+    <paper-material class='layout horizontal'>
+      <paper-button raised on-click='launchFullScreen' class=''>fullscreen</paper-button>
+    </paper-material>
+
     <iron-pages id='pages' selected="{{selected}}" on-webkitfullscreenchange='resizeImages'>
-      <template is='dom-repeat' items='{{slideshows}}'>
-        <template is='dom-if' if='{{item.include}}'>
-          <template is='dom-repeat' items='{{item.pics}}'>
-            <section>
-              <iron-image src="{{item}}"  sizing="contain" height='{{height}}' width='{{width}}'></iron-image>
-            </section>
-          </template>
-        </template>
-      </template>
+      <iron-image id='yin' src='{{yinSource}}' height='{{height}}' width='{{width}}' sizing='contain'></iron-image>
+      <iron-image id='yang' src='{{yangSource}}' height='{{height}}' width='{{width}}' sizing='contain'></iron-image>
     </iron-pages>
 
   </template>
@@ -48,15 +51,102 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       ready: function(){
         setInterval(this.changeSlides.bind(this),this.slideInterval);
       },
+      listeners:{
+        'slides-ready':'_onSlidesReady',
+        'display-yang': 'showSlide',
+        'display-yin': 'showSlide',
+        'source-yang': 'sourceSlide',
+        'source-yin': 'sourceSlide'
+      },
       properties: {
+        counter: { type: Number, value: 0, notify: true},
+        yangSource: { type: String, notify: true},
+        yinSource: { type: String, notify: true},
+        dataRef: { type: Object, notify: true, observer: '_dataRefChanged'},
         slideInterval: { type: Number,value: 1000, notify: true},
         selected: { type: Number,value: 0, notify: true},
         width: { type: Number,value: 600, notify: true},
         height: { type: Number,value: 400, notify: true},
-        slideshows: { type: Array, notify: true, observer: 'slideshowsChanged'}
+        isOnDeck: { type: Boolean, notify: true, observer: '_isOnDeckChanged'},
+        onDeck: { type: Array, notify: true},
+        slides: { type: Array, notify: true, observer: '_slidesChanged'}
       },
-      slideshowsChanged: function(slideshows){
-        console.log(slideshows);
+      _isOnDeckChanged: function(isOnDeck){
+        if(isOnDeck){
+          this.$.toast.show();
+        }
+      },
+      sourceSlide: function(e){
+        console.log(this.counter,this.slides.length);
+        //get the next dataUrl
+        var src = this.slides[this.counter].dataUrl;
+        if(this.counter == 0 && this.isOnDeck){ //swap out old slides with updated slides
+          console.log('changing slide to on-deck');
+          src = this.onDeck[this.counter].dataUrl;
+          this.slides = this.onDeck;
+        }
+        //set the source of the offscreen image
+        e.type === 'source-yin' ? this.yinSource = src : this.yangSource = src;
+
+        //display next slide
+        (e.type === 'source-yin') ?
+          this.async(function(){
+            this.fire('display-yin',0);
+          },this.slideInterval) :
+          this.async(function(){
+            this.fire('display-yang',1);
+          },this.slideInterval) ;
+
+      },
+      showSlide: function(e,selected){
+        console.log(e.type,selected);
+        this.selected = selected;
+        //increment the counter
+        this.counter = (this.counter + 1) % this.slides.length;
+        e.type === 'display-yin' ? this.fire('source-yang') : this.fire('source-yin');
+      },
+      _onSlidesReady: function(e){
+        console.log(e.type);
+        this.yinSource = this.slides[this.counter].dataUrl;
+        this.counter = (this.counter + 1) % this.slides.length;
+        this.async(function(){
+          this.fire('display-yin',0);
+        },2000)
+      },
+      _slidesChanged: function(slides){
+        console.log('slides has changed')
+        if(slides.length > 0 && !this.isOnDeck){
+          this.fire('slides-ready');
+        } else if(this.isOnDeck){
+          this.isOnDeck = !this.isOnDeck;
+        }
+      },
+      _dataRefChanged: function(dataRef){
+        if(dataRef === {}){
+          // do nothing. ignore next line
+          // return this.slides;
+        }
+        console.log('updating slides')
+        console.log(dataRef);
+        var ret = [];
+        Object.keys(dataRef).forEach(function(key){
+          if(dataRef[key].include){
+            dataRef[key].pics.forEach(function(pic){
+                ret.push({
+                  slideshowid: key,
+                  dataUrl: pic
+                });
+            }, this);
+          }
+        }, this);
+        console.log(ret)
+        if(!this.slides){ //first time initializing slides;
+          this.slides = ret;
+        } else {  //updating an existing slides array
+          this.onDeck = ret; // ondeck will replace slides at the end of the slideshow;
+          this.isOnDeck = true;
+          // return this.slides; //return the same slides array for now
+        }
       },
       launchFullScreen: function(e){
         this.$.pages.webkitRequestFullscreen();

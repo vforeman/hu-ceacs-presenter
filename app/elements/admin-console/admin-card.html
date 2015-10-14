@@ -1,0 +1,68 @@
+<!--
+@license
+Copyright (c) 2015 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+<link rel="import" href="../../bower_components/paper-checkbox/paper-checkbox.html">
+<link rel="import" href="../../bower_components/iron-icons/iron-icons.html">
+<link rel="import" href="../../bower_components/paper-icon-button/paper-icon-button.html">
+
+<dom-module id="admin-card">
+  <template>
+    <style>
+      :host {
+        display: block;
+      }
+      paper-material{
+        padding: 8px 8px;
+      }
+    </style>
+
+    <paper-material elevation="1">
+      <div class="layout horizontal">
+        <span>Organization:</span><span>{{slideshow.organization}}</span>
+      </div>
+      <div class="layout horizontal">
+        <span>Description:</span><span>{{slideshow.description}}</span>
+      </div>
+      <div class="layout horizontal">
+        <span>DeadLine:</span><span>{{slideshow.deadline}}</span>
+      </div>
+      <paper-checkbox id='cb' checked='{{slideshow.include}}' on-change='onCheckboxToggle'>Include in Slideeshow?</paper-checkbox>
+    </paper-material>
+
+  </template>
+  <script>
+  (function() {
+    'use strict';
+
+    Polymer({
+      is: 'admin-card',
+      created: function(){
+      },
+      ready: function(){
+      },
+      behaviors: [],
+      listeners:{
+      },
+      properties: {
+        update: {type: Object, notify: true},
+        slideshow: {type: Object, notify: true, observer: '_slideshowChanged'},
+        elementName: {type: String, value: 'admin-card', notify: true}
+      },
+      onCheckboxToggle: function(e){
+        this.update(this.slideshow.__firebaseKey__, this.$.cb.checked);
+      },
+      _slideshowChanged: function(slideshow){
+        console.log(slideshow)
+      }
+    });
+  })();
+  </script>
+</dom-module>
