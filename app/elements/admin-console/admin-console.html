@@ -15,6 +15,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 <link rel="import" href="../../bower_components/paper-input/paper-input.html">
 <link rel="import" href="../../bower_components/paper-button/paper-button.html">
 <link rel="import" href="../../bower_components/iron-pages/iron-pages.html">
+<link rel="import" href="admin-card.html">
 
 <dom-module id="admin-console">
   <template>
@@ -31,26 +32,26 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     <template is='dom-if' if='{{isLoggedIn}}'>
         <paper-button raised
           on-click='_attemptLogout'>Logout</paper-button>
-        <firebase-collection id='slideshows'
+        <firebase-document id='ref'
           location='https://hu-cx-presenter.firebaseio.com/slideshows'
-          data='{{slideshows}}'></firebase-collection>
-        <firebase-collection id='tokens'
-          location='https://hu-cx-presenter.firebaseio.com/submissionTokens'
-          data='{{tokens}}'></firebase-collection>
+          data='{{dataRef}}'></firebase-document>
     </template>
 
 
 
     <iron-pages id='pages' selected="{{selected}}">
+
       <section >
         <paper-input id='email' label="email"></paper-input>
         <paper-input id='password' label="password" type='password'></paper-input>
         <paper-button raised
           on-click='_attemptLogin'>Login</paper-button>
       </section>
+
       <section>
         <template is='dom-repeat' items="{{slideshows}}">
-          <paper-material elevation="1">
+          <admin-card slideshow='{{item}}'></admin-card>
+          <!-- <paper-material elevation="1">
             <span>{{item.organization}}</span>,
             <span>{{item.description}}</span>,
             <span>{{item.deadline}}</span>,
@@ -58,9 +59,10 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             <template is='dom-repeat' items='{{item.pics}}'>
               <iron-image src="{{item}}" sizing="contain" height='50' width='50'></iron-image>
             </template>
-          </paper-material>
+          </paper-material> -->
         </template>
       </section>
+
     </iron-pages>
   </template>
   <script>
@@ -71,15 +73,19 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       is: 'admin-console',
 
       properties: {
-        tokens: {type: Array},
-        slideshows: {type: Array, observer: '_slideshowsChanged'},
+        dataRef: {type: Object, notify: true},
+        slideshows: {type: Array, computed: '_slideshows(dataRef)'},
         selected: {type: Number,notify: true, computed: '_selected(isLoggedIn)'},
         isLoggedIn: {type: Object,notify: true, computed: '_isLoggedIn(user)'},
         user: {type: Object,notify: true, observer: '_userChanged'},
         foo: {type: String,value: 'admin-console',notify: true}
       },
-      _slideshowsChanged: function(slideshows){
-        console.log('slideshows', slideshows)
+      _slideshows: function(dataRef){
+        var ret = [];
+        Object.keys(dataRef).forEach(function(key){
+          ret.push(dataRef[key]);
+        }, this);
+        return ret;
       },
       _userChanged: function(user){
         console.log('user',user);

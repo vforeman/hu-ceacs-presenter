@@ -10,8 +10,13 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
 <link rel="import" href="../../bower_components/polymer/polymer.html">
 <link rel="import" href="../../bower_components/paper-checkbox/paper-checkbox.html">
+<link rel="import" href="../../bower_components/iron-icon/iron-icon.html">
+<link rel="import" href="../../bower_components/iron-icons/image-icons.html">
 <link rel="import" href="../../bower_components/iron-icons/iron-icons.html">
+<link rel="import" href="../../bower_components/iron-image/iron-image.html">
 <link rel="import" href="../../bower_components/paper-icon-button/paper-icon-button.html">
+<link rel="import" href="../../bower_components/paper-tabs/paper-tabs.html">
+<link rel="import" href="../../bower_components/paper-item/paper-item.html">
 
 <dom-module id="admin-card">
   <template>
@@ -22,19 +27,48 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       paper-material{
         padding: 8px 8px;
       }
+      label{
+        color:#5e5e5e;
+        font-weight: bold;
+        font-size: .8em;
+        margin-right: 8px;
+      }
+      paper-tabs{
+        --paper-tabs-selection-bar-color: blue;
+      }
+      .checkbox-item{
+        background:#a9c6e4;
+      }
+
     </style>
 
-    <paper-material elevation="1">
-      <div class="layout horizontal">
-        <span>Organization:</span><span>{{slideshow.organization}}</span>
+    <paper-material elevation="1" class='layout vertical'>
+      <div class='layout horizontal justified'>
+        <paper-item class="layout vertical">
+          <label>Organization</label>
+          <span>{{slideshow.organization}}</span>
+        </paper-item>
+        <paper-item class="layout vertical">
+          <label>Description</label>
+          <span>{{slideshow.description}}</span>
+        </paper-item>
+        <paper-item class="layout vertical">
+          <label>Deadline</label>
+          <span>{{slideshow.deadline}}</span>
+        </paper-item>
+        <paper-item class='checkbox-item'>
+          <label>Include in Slideshow?</label>
+          <paper-checkbox id='cb' checked='{{slideshow.include}}' on-change='onCheckboxToggle'></paper-checkbox>
+        </paper-item>
       </div>
-      <div class="layout horizontal">
-        <span>Description:</span><span>{{slideshow.description}}</span>
-      </div>
-      <div class="layout horizontal">
-        <span>DeadLine:</span><span>{{slideshow.deadline}}</span>
-      </div>
-      <paper-checkbox id='cb' checked='{{slideshow.include}}' on-change='onCheckboxToggle'>Include in Slideeshow?</paper-checkbox>
+      <paper-tabs scrollable class='flex' align-bottom noink>
+        <template is='dom-repeat' items='{{pics}}'>
+          <paper-tab>
+            <iron-image src="{{item}}" height='{{height}}' width='{{width}}' preload sizing="contain"></iron-image>
+          </paper-tab>
+        </template>
+      </paper-tabs>
+      <paper-button>
     </paper-material>
 
   </template>
@@ -52,12 +86,18 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       listeners:{
       },
       properties: {
+        pics: {type: Array, notify: true, computed: '_pics(slideshow)'},
         update: {type: Object, notify: true},
         slideshow: {type: Object, notify: true, observer: '_slideshowChanged'},
+        height: {type: String, value: 100, notify: true},
+        width: {type: String, value: 100, notify: true},
         elementName: {type: String, value: 'admin-card', notify: true}
       },
+      _pics: function(slideshow){
+        return slideshow.pics;
+      },
       onCheckboxToggle: function(e){
-        this.update(this.slideshow.__firebaseKey__, this.$.cb.checked);
+
       },
       _slideshowChanged: function(slideshow){
         console.log(slideshow)
