@@ -27,7 +27,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       }
     </style>
     <firebase-document id='ref'
-      location='https://hu-cx-presenter.firebaseio.com/slideshows'
+      location='{{location}}'
       data='{{dataRef}}'></firebase-document>
     <paper-toast id='toast'
       text='The slide deck is about to be updated! The updated slide deck will begin once this rotation is complete.'
@@ -49,16 +49,19 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     Polymer({
       is: 'hu-presenter',
       ready: function(){
-        setInterval(this.changeSlides.bind(this),this.slideInterval);
+        this.intervalID = setInterval(this.changeSlides.bind(this),this.slideInterval);
       },
       listeners:{
         'slides-ready':'_onSlidesReady',
         'display-yang': 'showSlide',
         'display-yin': 'showSlide',
         'source-yang': 'sourceSlide',
-        'source-yin': 'sourceSlide'
+        'source-yin': 'sourceSlide',
+        'reset-presentation': '_resetPresentation'
       },
       properties: {
+        location: { type: String, notify: true, computed: '_location(name)'},
+        name: { type: String, notify: true, observer: '_nameChanged'},
         counter: { type: Number, value: 0, notify: true},
         yangSource: { type: String, notify: true},
         yinSource: { type: String, notify: true},
@@ -70,6 +73,18 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         isOnDeck: { type: Boolean, notify: true, observer: '_isOnDeckChanged'},
         onDeck: { type: Array, notify: true},
         slides: { type: Array, notify: true, observer: '_slidesChanged'}
+      },
+      _location: function(name){
+        return 'https://hu-cx-presenter.firebaseio.com/location/' + name + '/slideshows';
+      },
+      _resetPresentation: function(e){
+        // clearInterval(this.intervalID);
+
+      },
+      _nameChanged: function(name, old){
+        if(name !== old){
+          this.fire('reset-presentation')
+        }
       },
       _isOnDeckChanged: function(isOnDeck){
         if(isOnDeck){
