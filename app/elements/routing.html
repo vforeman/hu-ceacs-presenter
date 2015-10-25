@@ -27,6 +27,11 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       app.route = 'adminconsole';
     });
 
+    page('/location/:name', function (data) {
+      app.route = 'location';
+      app.params = data.params;
+    });
+
     page('/users/:name', function (data) {
       app.route = 'user-info';
       app.params = data.params;

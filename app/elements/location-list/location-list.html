@@ -9,15 +9,34 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 -->
 
 <link rel="import" href="../../bower_components/polymer/polymer.html">
+<link rel="import" href="../../bower_components/paper-item/paper-item.html">
+<link rel="import" href="../../bower_components/firebase-element/firebase-document.html">
 
 <dom-module id="location-list">
   <template>
     <style>
       :host {
         display: block;
+        @apply(--layout-vertical);
+      }
+      span{
+        margin: 6px 6px;
       }
     </style>
-    <div>Hello from <span>{{elementName}}</span></div>
+
+    <firebase-document id='ref'
+      location='https://hu-cx-presenter.firebaseio.com/locations'
+      data='{{_locations}}'></firebase-document>
+
+    <template is='dom-repeat' items='{{locations}}'>
+      <a data-route='location' href='{{_href(item.name)}}'>
+        <paper-item class='layout horizontal'>
+          <span>{{item.name}}</span>
+          <span>{{item.building}}</span>
+          <span>{{item.displays}}</span>
+        </paper-item>
+      </a>
+    </template>
   </template>
   <script>
   (function() {
@@ -33,7 +52,22 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       listeners:{
       },
       properties: {
+        locations: {type: Array, notify: true, computed: '_genLocations(_locations)'},
+        _locations: {type: Object, notify: true},
         elementName: {type: String, value: 'location-list', notify: true}
+      },
+      _href: function(name){
+        return '/location/' + name;
+      },
+      _genLocations: function(locations){
+        var ret = Object.keys(locations).map(function(key, index, keys){
+          return {
+            name : key,
+            building : locations[key].meta.building,
+            displays : locations[key].meta.displays
+          };
+        }, this);
+        return ret;
       }
     });
   })();
