@@ -17,6 +17,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 <link rel="import" href="../../bower_components/paper-toast/paper-toast.html">
 <link rel="import" href="../../bower_components/iron-image/iron-image.html">
 <link rel="import" href="../../bower_components/firebase-element/firebase-document.html">
+<link rel="import" href="hu-slide.html">
 <dom-module id="hu-presenter">
   <template>
     <style>
@@ -39,9 +40,11 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       <paper-button raised on-click='launchFullScreen' class=''>fullscreen</paper-button>
     </paper-material>
 
-    <neon-animated-pages id='pages' selected="{{selected}}" on-webkitfullscreenchange='resizeImages'>
-      <iron-image id='yin' src='{{yinSource}}' height='{{height}}' width='{{width}}' sizing='contain'></iron-image>
-      <iron-image id='yang' src='{{yangSource}}' height='{{height}}' width='{{width}}' sizing='contain'></iron-image>
+    <neon-animated-pages id='pages' selected="{{selected}}" on-webkitfullscreenchange='resizeImages'
+      entry-animation='fade-in-animation'
+      exit-animation='fade-out-animation'>
+      <hu-slide id='yin' src='{{yinSource}}' height='{{height}}' width='{{width}}'></hu-slide>
+      <hu-slide id='yang' src='{{yangSource}}' height='{{height}}' width='{{width}}'></hu-slide>
     </neon-animated-pages>
 
   </template>
@@ -69,7 +72,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         yangSource: { type: String, notify: true},
         yinSource: { type: String, notify: true},
         dataRef: { type: Object, notify: true, observer: '_dataRefChanged'},
-        slideInterval: { type: Number,value: 1000, notify: true},
+        slideInterval: { type: Number,value: 10000, notify: true},
         selected: { type: Number,value: 0, notify: true},
         width: { type: Number,value: 600, notify: true},
         height: { type: Number,value: 400, notify: true},
