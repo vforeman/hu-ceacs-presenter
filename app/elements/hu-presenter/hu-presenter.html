@@ -75,13 +75,16 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         slides: { type: Array, notify: true, observer: '_slidesChanged'}
       },
       _location: function(name){
-        return 'https://hu-cx-presenter.firebaseio.com/location/' + name + '/slideshows';
+        var loc = 'https://hu-cx-presenter.firebaseio.com/locations/' + name;
+        console.log(loc)
+        return loc;
       },
       _resetPresentation: function(e){
         // clearInterval(this.intervalID);
 
       },
       _nameChanged: function(name, old){
+        console.log(name);
         if(name !== old){
           this.fire('reset-presentation')
         }
@@ -141,17 +144,22 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           // do nothing. ignore next line
           // return this.slides;
         }
+        if(dataRef === null) return;
         console.log('updating slides')
         console.log(dataRef);
         var ret = [];
         Object.keys(dataRef).forEach(function(key){
-          if(dataRef[key].include){
-            dataRef[key].pics.forEach(function(pic){
-                ret.push({
-                  slideshowid: key,
-                  dataUrl: pic
-                });
-            }, this);
+          if(key !== 'meta'){
+              console.log(dataRef[key])
+            if(dataRef[key].include){
+              console.log(dataRef[key].slides)
+              dataRef[key].slides.forEach(function(pic){
+                  ret.push({
+                    slideshowid: key,
+                    dataUrl: pic
+                  });
+              }, this);
+            }
           }
         }, this);
         console.log(ret)

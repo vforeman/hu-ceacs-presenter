@@ -9,15 +9,117 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 -->
 
 <link rel="import" href="../../bower_components/polymer/polymer.html">
+<link rel="import" href="../../bower_components/firebase-element/firebase-document.html">
+<link rel="import" href="../../bower_components/paper-dialog/paper-dialog.html">
+<link rel="import" href="../../bower_components/paper-date-picker/paper-date-picker.html">
+<link rel="import" href="../../bower_components/paper-checkbox/paper-checkbox.html">
+<link rel="import" href="../../bower_components/iron-autogrow-textarea/iron-autogrow-textarea.html">
 
 <dom-module id="submission-page">
   <template>
     <style>
       :host {
         display: block;
+        @apply(--layout-vertical);
+      }
+      label{
+        width: 288px;
+      }
+      div.ui.input{
+        margin: 8px 8px;
+      }
+      iron-autogrow-textarea::shadow textarea#textarea{
+        border: 1px solid rgba(34, 36, 38, 0.15);
+        padding: 20px 14px;
+        box-shadow: none;
+      }
+      paper-checkbox{
+        margin:6px 6px;
+      }
+      paper-checkbox{
+        --paper-checkbox-unchecked-color: var(--medium-grey);
+        --paper-checkbox-label-color: var(--medium-grey);
       }
     </style>
-    <div>Hello from <span>{{elementName}}</span></div>
+
+    <firebase-document id='ref' location='https://hu-cx-presenter.firebaseio.com/locations'></firebase-document>
+
+    <!-- ORG NAME -->
+    <div class='ui  input layout horizontal'>
+      <label class='ui label right pointing'>Organization Name:</label>
+      <input id='orgName' type='text' class='ui input huge flex' placeholder="'my organization'">
+    </div>
+    <!-- CONTACT EMAIL -->
+    <div class='ui  input layout horizontal'>
+      <label class='ui label right pointing'>Contact Email:</label>
+      <input id='email' type='text' class='ui huge input flex' placeholder='johndoe@bison.howard.edu'>
+    </div>
+    <!-- DESCRIPTION -->
+    <div class='ui input layout horizontal'>
+      <label class='ui label right pointing'>Slideshow Description:</label>
+      <iron-autogrow-textarea  id='description' rows='4' class='ui input flex' placeholder='description...'></iron-autogrow-textarea>
+    </div>
+    <!-- UPLOAD -->
+    <div class='ui input layout horizontal'>
+      <label class='ui label right pointing'>Upload your slides:</label>
+      <div class='layout horizontal ui input'>
+        <div class="ui labeled button" tabindex="0" on-click='_openFileDialog'>
+          <div class="ui basic blue button">
+            <i class="folder open icon"></i> Upload Slides
+          </div>
+          <a class="ui basic left pointing blue label">{{numFilesLoaded}}</a>
+        </div>
+      </div>
+    </div>
+    <!-- LOCATION -->
+    <div class='ui  input layout horizontal'>
+      <label class='ui label right pointing'>Select the locations you want your slides to appear at:</label>
+      <div class='layout horizontal wrap flex'>
+        <paper-checkbox checked='{{formData.locations.engineering_lobby}}'>Engineering Lobby</paper-checkbox>
+        <paper-checkbox checked='{{formData.locations.cs_hallway}}'>CS Hallway</paper-checkbox>
+      </div>
+    </div>
+
+    <div class='ui  input layout horizontal'>
+      <label class='ui label right pointing'>Appearance Duration:</label>
+
+      <!-- START/END DATES -->
+      <div class='layout horizontal ui input'>
+        <div class="ui labeled button" tabindex="0" on-click='_openStartDatePicker'>
+          <div class="ui basic green button">
+            <i class="calendar open icon"></i> Start Date
+          </div>
+          <a class="ui basic left pointing green label">{{formattedStartDate}}</a>
+        </div>
+        <div class="ui labeled button" tabindex="0" on-click='_openEndDatePicker'>
+          <div class="ui basic red button">
+            <i class="calendar open icon"></i> End Date
+          </div>
+          <a class="ui basic left pointing red label">{{formattedEndDate}}</a>
+        </div>
+      </div>
+
+    </div>
+
+    <button class='ui button flex' on-click='_submit'> Submit Your Slides</button>
+
+    <paper-dialog id='startDialog'>
+      <paper-date-picker id='datePicker1' min-date='{{minDate}}' max-date='{{maxDate}}' date='{{startDate}}'></paper-date-picker>
+      <div class='buttons'>
+        <button class='ui button' dialog-confirm>Save</button>
+        <button class='ui button' dialog-dismiss>Cancel</button>
+      </div>
+    </paper-dialog>
+
+    <paper-dialog id='endDialog'>
+      <paper-date-picker id='datePicker2' min-date='{{minDate}}' max-date='{{maxDate}}' date='{{endDate}}'></paper-date-picker>
+      <div class='buttons'>
+        <button class='ui button' dialog-confirm>Save</button>
+        <button class='ui button' dialog-dismiss>Cancel</button>
+      </div>
+    </paper-dialog>
+
+
   </template>
   <script>
   (function() {
@@ -28,12 +130,75 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       created: function(){
       },
       ready: function(){
+        this.formData.locations = {
+          cs_hallway: false,
+          engineering_lobby: false,
+        };
+        this.fileInput = this.create('input',{
+          id: 'input',
+          accepts: "image/gif, image/jpg, image/jpeg, image/png",
+          type: 'file',
+          multiple: true,
+          onchange: this.onload.bind(this)
+        });
       },
       behaviors: [],
       listeners:{
       },
       properties: {
+        formData: {type: Object, value:{}, notify: true},
+        formattedStartDate: {type: String, notify: true, computed: '_format(startDate)'},
+        formattedEndDate: {type: String, notify: true, computed: '_format(endDate)'},
+        minDate: {type: String, value: moment().format('L'), notify: true},
+        maxDate: {type: String, value: moment().add(4,'month').calendar(), notify: true},
+        slideData: {type: Array, value: [], notify: true},
+        numFilesLoaded: {type: Number, value: 0, notify: true},
         elementName: {type: String, value: 'submission-page', notify: true}
+      },
+      _submit: function(e){
+        console.log(this.formData)
+        this.formData.orgName = this.$.orgName.value;
+        this.formData.email = this.$.email.value;
+        this.formData.description = this.$.description.value;
+        this.formData.slides = this.slideData;
+        this.formData.duration = {
+            start: this.formattedStartDate,
+            end: this.formattedEndDate
+        };
+        this.formData.include = false;
+
+        Object.keys(this.formData.locations).forEach(function(key){
+          if(this.formData.locations[key]){
+            this.$.ref.query.child(key).push(this.formData);
+          }
+        }, this);
+
+        console.log(this.formData)
+      },
+      _openStartDatePicker: function(e){
+        this.$.startDialog.open();
+      },
+      _openEndDatePicker: function(e){
+        this.$.endDialog.open();
+      },
+      _openFileDialog: function(e){
+        this.fileInput.click();
+      },
+      _format: function(date){
+        return this.$.datePicker1.dateFormat(date,'L');
+      },
+      onload: function(e){
+        console.log('files selected for upload', this.fileInput.files);
+        var length = this.fileInput.files.length;
+        this.numFilesLoaded = length;
+        for(var i = 0; i < length; ++i){
+          var reader = new FileReader();
+          reader.onload = (function(e){
+            console.log(e.target.result);
+            this.slideData.push(e.target.result)
+          }).bind(this);
+          reader.readAsDataURL(this.fileInput.files[i]);
+        }
       }
     });
   })();
