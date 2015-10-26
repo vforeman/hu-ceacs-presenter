@@ -9,6 +9,9 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 -->
 
 <link rel="import" href="../../bower_components/polymer/polymer.html">
+<link rel="import" href="../../bower_components/neon-animation/neon-animated-pages.html">
+<link rel="import" href="../../bower_components/neon-animation/animations/fade-in-animation.html">
+<link rel="import" href="../../bower_components/neon-animation/animations/fade-out-animation.html">
 <link rel="import" href="../../bower_components/paper-icon-button/paper-icon-button.html">
 <link rel="import" href="../../bower_components/paper-button/paper-button.html">
 <link rel="import" href="../../bower_components/paper-toast/paper-toast.html">
@@ -36,10 +39,10 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       <paper-button raised on-click='launchFullScreen' class=''>fullscreen</paper-button>
     </paper-material>
 
-    <iron-pages id='pages' selected="{{selected}}" on-webkitfullscreenchange='resizeImages'>
+    <neon-animated-pages id='pages' selected="{{selected}}" on-webkitfullscreenchange='resizeImages'>
       <iron-image id='yin' src='{{yinSource}}' height='{{height}}' width='{{width}}' sizing='contain'></iron-image>
       <iron-image id='yang' src='{{yangSource}}' height='{{height}}' width='{{width}}' sizing='contain'></iron-image>
-    </iron-pages>
+    </neon-animated-pages>
 
   </template>
   <script>
